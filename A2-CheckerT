@@ -109,6 +109,13 @@ void mousePressed() {
     int oldRow = int(selectedPiece.y);
     
     if (isValidMove(oldRow, oldCol, row, col)) {
+      // Check if it's a capture
+      if (abs(oldRow - row) == 2 && abs(oldCol - col) == 2) {
+        int capturedRow = (oldRow + row) / 2;
+        int capturedCol = (oldCol + col) / 2;
+        board[capturedRow][capturedCol] = 0; // Remove the captured piece
+      }
+      
       board[row][col] = board[oldRow][oldCol];
       board[oldRow][oldCol] = 0;
       
@@ -126,17 +133,39 @@ void mousePressed() {
 }
 
 boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
+  int piece = board[oldRow][oldCol];
+  
   // ตรวจสอบการย้ายหมากธรรมดา
-  if (board[oldRow][oldCol] == 1 || board[oldRow][oldCol] == 2) {
+  if (piece == 1 || piece == 2) {
+    // Normal move
     if (abs(newRow - oldRow) == 1 && abs(newCol - oldCol) == 1 && board[newRow][newCol] == 0) {
       return true;
+    }
+    
+    // Capture move
+    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2) {
+      int capturedRow = (oldRow + newRow) / 2;
+      int capturedCol = (oldCol + newCol) / 2;
+      if (board[capturedRow][capturedCol] != 0 && board[capturedRow][capturedCol] != piece) {
+        return true;
+      }
     }
   }
   
   // ตรวจสอบการย้ายของหงส์
-  if (board[oldRow][oldCol] == 3 || board[oldRow][oldCol] == 4) {
+  if (piece == 3 || piece == 4) {
+    // Normal move
     if (abs(newRow - oldRow) == abs(newCol - oldCol) && board[newRow][newCol] == 0) {
       return true;
+    }
+    
+    // Capture move
+    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2) {
+      int capturedRow = (oldRow + newRow) / 2;
+      int capturedCol = (oldCol + newCol) / 2;
+      if (board[capturedRow][capturedCol] != 0 && board[capturedRow][capturedCol] != piece) {
+        return true;
+      }
     }
   }
   
