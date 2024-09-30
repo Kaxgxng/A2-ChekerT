@@ -4,6 +4,7 @@ int tileSize = 100;
 int[][] board = new int[rows][cols]; // array 2 มิติสำหรับกระดานหมาก
 PVector selectedPiece = null; // ตำแหน่งของหมากที่เลือก
 boolean isBlackTurn = true; // เริ่มต้นฝ่ายดำ
+boolean capturing = false; // State to indicate if multiple captures are possible
 String saveFileName = "savegame.txt"; // ชื่อไฟล์สำหรับบันทึก
 
 void setup() {
@@ -114,22 +115,65 @@ void mousePressed() {
         int capturedRow = (oldRow + row) / 2;
         int capturedCol = (oldCol + col) / 2;
         board[capturedRow][capturedCol] = 0; // Remove the captured piece
+        
+        // Update position after capture
+        board[row][col] = board[oldRow][oldCol];
+        board[oldRow][oldCol] = 0;
+        
+        // King promotion
+        if (row == 0 && board[row][col] == 2) {
+          board[row][col] = 4; // หงส์ฝ่ายดำ
+        } else if (row == rows - 1 && board[row][col] == 1) {
+          board[row][col] = 3; // หงส์ฝ่ายขาว
+        }
+        
+        // Check if piece can capture again
+        selectedPiece = new PVector(col, row); // Update selectedPiece to new position
+        capturing = canCaptureAgain(row, col);
+        
+        if (!capturing) {
+          selectedPiece = null;
+          isBlackTurn = !isBlackTurn; // End turn if no more captures are possible
+        }
+      } else {
+        // Regular move without capture
+        board[row][col] = board[oldRow][oldCol];
+        board[oldRow][oldCol] = 0;
+        selectedPiece = null;
+        capturing = false;
+        isBlackTurn = !isBlackTurn; // End turn
       }
-      
-      board[row][col] = board[oldRow][oldCol];
-      board[oldRow][oldCol] = 0;
-      
-      // เช็คว่าหมากกลายเป็นหงส์หรือไม่
-      if (row == 0 && board[row][col] == 2) {
-        board[row][col] = 4; // หงส์ฝ่ายดำ
-      } else if (row == rows - 1 && board[row][col] == 1) {
-        board[row][col] = 3; // หงส์ฝ่ายขาว
-      }
-      
-      isBlackTurn = !isBlackTurn;
     }
-    selectedPiece = null;
   }
+}
+
+// Check if the piece can capture again
+boolean canCaptureAgain(int row, int col) {
+  int piece = board[row][col];
+  
+  // Check all directions for possible capture
+  int[][] directions = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}};
+  
+  for (int[] dir : directions) {
+    int newRow = row + dir[0];
+    int newCol = col + dir[1];
+    int midRow = (row + newRow) / 2;
+    int midCol = (col + newCol) / 2;
+    
+    if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && board[newRow][newCol] == 0) {
+      if (piece == 1 || piece == 2) { // Normal pieces
+        if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
+          return true;
+        }
+      } else if (piece == 3 || piece == 4) { // Kings
+        if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
@@ -143,10 +187,10 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
     }
     
     // Capture move
-    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2) {
-      int capturedRow = (oldRow + newRow) / 2;
-      int capturedCol = (oldCol + newCol) / 2;
-      if (board[capturedRow][capturedCol] != 0 && board[capturedRow][capturedCol] != piece) {
+    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2 && board[newRow][newCol] == 0) {
+      int midRow = (oldRow + newRow) / 2;
+      int midCol = (oldCol + newCol) / 2;
+      if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
         return true;
       }
     }
@@ -154,16 +198,16 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
   
   // ตรวจสอบการย้ายของหงส์
   if (piece == 3 || piece == 4) {
-    // Normal move
+    // King normal move
     if (abs(newRow - oldRow) == abs(newCol - oldCol) && board[newRow][newCol] == 0) {
       return true;
     }
     
-    // Capture move
-    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2) {
-      int capturedRow = (oldRow + newRow) / 2;
-      int capturedCol = (oldCol + newCol) / 2;
-      if (board[capturedRow][capturedCol] != 0 && board[capturedRow][capturedCol] != piece) {
+    // King capture move
+    if (abs(newRow - oldRow) == 2 && abs(newCol - newCol) == 2 && board[newRow][newCol] == 0) {
+      int midRow = (oldRow + newRow) / 2;
+      int midCol = (oldCol + newCol) / 2;
+      if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
         return true;
       }
     }
