@@ -125,3 +125,49 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
   
   return false;
 }
+// ระบบบันทึกเกม (Save Game)
+void saveGame() {
+  String[] gameData = new String[rows + 1]; // 1 แถวพิเศษสำหรับบันทึกตาผู้เล่น
+  for (int row = 0; row < rows; row++) {
+    gameData[row] = join(intArrayToStringArray(board[row]), ",");
+  }
+  gameData[rows] = isBlackTurn ? "black" : "white"; // บันทึกตาผู้เล่น
+  saveStrings(saveFileName, gameData);
+}
+
+// ระบบโหลดเกม (Load Game)
+void loadGame() {
+  String[] gameData = loadStrings(saveFileName);
+  if (gameData == null) return; // หากไม่มีไฟล์ให้ทำอะไรเลย
+  
+  for (int row = 0; row < rows; row++) {
+    String[] rowData = split(gameData[row], ',');
+    for (int col = 0; col < cols; col++) {
+      board[row][col] = int(rowData[col]);
+    }
+  }
+  
+  // โหลดข้อมูลตาผู้เล่น
+  isBlackTurn = gameData[rows].equals("black");
+}
+
+String[] intArrayToStringArray(int[] arr) {
+  String[] result = new String[arr.length];
+  for (int i = 0; i < arr.length; i++) {
+    result[i] = str(arr[i]);
+  }
+  return result;
+}
+
+// กดปุ่ม S เพื่อบันทึกเกม
+void keyPressed() {
+  if (key == 's' || key == 'S') {
+    saveGame();
+    println("Game Saved");
+  }
+  // กดปุ่ม L เพื่อโหลดเกม
+  if (key == 'l' || key == 'L') {
+    loadGame();
+    println("Game Loaded");
+  }
+}
