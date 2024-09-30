@@ -1,9 +1,12 @@
 int boardSize = 8; // ขนาดของกระดาน
 int tileSize = 80; // ขนาดของแต่ละช่องในกระดาน
+int[][] pieces = new int[boardSize][boardSize]; // เก็บตำแหน่งของหมาก
 
 void setup() {
   size(boardSize * tileSize, boardSize * tileSize);
+  setupPieces(); // จัดวางหมากในตำแหน่งเริ่มต้น
   drawBoard();
+  drawPieces(); // วาดตัวหมาก
 }
 
 void drawBoard() {
@@ -16,6 +19,39 @@ void drawBoard() {
         fill(0); // สีดำ
       }
       rect(col * tileSize, row * tileSize, tileSize, tileSize);
+    }
+  }
+}
+
+void drawPieces() {
+  for (int row = 0; row < boardSize; row++) {
+    for (int col = 0; col < boardSize; col++) {
+      if (pieces[row][col] == 1) {
+        fill(255, 0, 0); // ตัวหมากสีแดง
+        ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
+      } else if (pieces[row][col] == 2) {
+        fill(0); // ตัวหมากสีดำ
+        ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
+      }
+    }
+  }
+}
+
+void setupPieces() {
+  // วางตัวหมากเริ่มต้นสำหรับผู้เล่นทั้งสองฝ่าย
+  for (int row = 0; row < 3; row++) { // หมากสีดำ (ฝ่ายล่าง)
+    for (int col = 0; col < boardSize; col++) {
+      if ((row + col) % 2 == 1) {
+        pieces[row][col] = 2; // ฝ่ายสีดำ
+      }
+    }
+  }
+  
+  for (int row = 5; row < 8; row++) { // หมากสีแดง (ฝ่ายบน)
+    for (int col = 0; col < boardSize; col++) {
+      if ((row + col) % 2 == 1) {
+        pieces[row][col] = 1; // ฝ่ายสีแดง
+      }
     }
   }
 }
