@@ -4,7 +4,7 @@ int tileSize = 100;
 int[][] board = new int[rows][cols]; // array 2 มิติสำหรับกระดานหมาก
 PVector selectedPiece = null; // ตำแหน่งของหมากที่เลือก
 boolean isBlackTurn = true; // เริ่มต้นฝ่ายดำ
-
+String saveFileName = "savegame.txt"; // ชื่อไฟล์สำหรับบันทึก
 
 void setup() {
   size(800, 800);
@@ -17,6 +17,7 @@ void draw() {
   drawPieces();
   if (selectedPiece != null) {
     highlightSelectedPiece();
+    drawPathway();
   }
 }
 
@@ -78,6 +79,22 @@ void highlightSelectedPiece() {
   strokeWeight(1);
 }
 
+// Function to highlight valid pathways for selected piece
+void drawPathway() {
+  int oldCol = int(selectedPiece.x);
+  int oldRow = int(selectedPiece.y);
+  
+  // Check and highlight valid moves
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
+      if (isValidMove(oldRow, oldCol, row, col)) {
+        fill(0, 255, 0, 150); // สีเขียวแสดงจุดที่สามารถเดินได้
+        rect(col * tileSize, row * tileSize, tileSize, tileSize);
+      }
+    }
+  }
+}
+
 void mousePressed() {
   int col = mouseX / tileSize;
   int row = mouseY / tileSize;
@@ -125,6 +142,7 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
   
   return false;
 }
+
 // ระบบบันทึกเกม (Save Game)
 void saveGame() {
   String[] gameData = new String[rows + 1]; // 1 แถวพิเศษสำหรับบันทึกตาผู้เล่น
