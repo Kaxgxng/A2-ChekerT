@@ -1,22 +1,49 @@
-int boardSize = 8; // ขนาดของกระดาน
-int tileSize = 80; // ขนาดของแต่ละช่องในกระดาน
-int[][] pieces = new int[boardSize][boardSize]; // เก็บตำแหน่งของหมาก
+int rows = 8;
+int cols = 8;
+int tileSize = 100;
+int[][] board = new int[rows][cols]; // array 2 มิติสำหรับกระดานหมาก
+PVector selectedPiece = null; // ตำแหน่งของหมากที่เลือก
+boolean isBlackTurn = true; // เริ่มต้นฝ่ายดำ
+
 
 void setup() {
-  size(boardSize * tileSize, boardSize * tileSize);
-  setupPieces(); // จัดวางหมากในตำแหน่งเริ่มต้น
+  size(800, 800);
+  setupBoard(); // ตั้งค่ากระดานเริ่มต้น
+}
+
+void draw() {
+  background(255);
   drawBoard();
-  drawPieces(); // วาดตัวหมาก
+  drawPieces();
+  if (selectedPiece != null) {
+    highlightSelectedPiece();
+  }
+}
+
+void setupBoard() {
+  // ใส่หมากให้แต่ละฝ่าย 2 แถวเท่านั้น
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
+      if ((row + col) % 2 == 1) {
+        if (row < 2) { // วางหมากขาวใน 2 แถวบนสุด
+          board[row][col] = 1; // ฝ่ายขาว
+        } else if (row > 5) { // วางหมากดำใน 2 แถวล่างสุด
+          board[row][col] = 2; // ฝ่ายดำ
+        } else {
+          board[row][col] = 0; // ช่องว่าง
+        }
+      }
+    }
+  }
 }
 
 void drawBoard() {
-  for (int row = 0; row < boardSize; row++) {
-    for (int col = 0; col < boardSize; col++) {
-      // สลับสีระหว่างสีขาวและสีดำ
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
       if ((row + col) % 2 == 0) {
         fill(255); // สีขาว
       } else {
-        fill(0); // สีดำ
+        fill(100); // สีดำ
       }
       rect(col * tileSize, row * tileSize, tileSize, tileSize);
     }
@@ -24,34 +51,77 @@ void drawBoard() {
 }
 
 void drawPieces() {
-  for (int row = 0; row < boardSize; row++) {
-    for (int col = 0; col < boardSize; col++) {
-      if (pieces[row][col] == 1) {
-        fill(255, 0, 0); // ตัวหมากสีแดง
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
+      if (board[row][col] == 1) {
+        fill(255); // ฝ่ายขาว
         ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
-      } else if (pieces[row][col] == 2) {
-        fill(0); // ตัวหมากสีดำ
+      } else if (board[row][col] == 2) {
+        fill(0); // ฝ่ายดำ
+        ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
+      } else if (board[row][col] == 3) {
+        fill(255, 0, 0); // หงส์ฝ่ายขาว
+        ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
+      } else if (board[row][col] == 4) {
+        fill(0, 0, 255); // หงส์ฝ่ายดำ
         ellipse(col * tileSize + tileSize / 2, row * tileSize + tileSize / 2, tileSize * 0.8, tileSize * 0.8);
       }
     }
   }
 }
 
-void setupPieces() {
-  // วางตัวหมากเริ่มต้นสำหรับผู้เล่นทั้งสองฝ่าย
-  for (int row = 0; row < 3; row++) { // หมากสีดำ (ฝ่ายล่าง)
-    for (int col = 0; col < boardSize; col++) {
-      if ((row + col) % 2 == 1) {
-        pieces[row][col] = 2; // ฝ่ายสีดำ
+void highlightSelectedPiece() {
+  stroke(255, 0, 0);
+  strokeWeight(4);
+  noFill();
+  rect(selectedPiece.x * tileSize, selectedPiece.y * tileSize, tileSize, tileSize);
+  strokeWeight(1);
+}
+
+void mousePressed() {
+  int col = mouseX / tileSize;
+  int row = mouseY / tileSize;
+  
+  if (selectedPiece == null && board[row][col] != 0) {
+    if ((isBlackTurn && (board[row][col] == 2 || board[row][col] == 4)) || 
+        (!isBlackTurn && (board[row][col] == 1 || board[row][col] == 3))) {
+      selectedPiece = new PVector(col, row); // เลือกหมาก
+    }
+  } else if (selectedPiece != null) {
+    int oldCol = int(selectedPiece.x);
+    int oldRow = int(selectedPiece.y);
+    
+    if (isValidMove(oldRow, oldCol, row, col)) {
+      board[row][col] = board[oldRow][oldCol];
+      board[oldRow][oldCol] = 0;
+      
+      // เช็คว่าหมากกลายเป็นหงส์หรือไม่
+      if (row == 0 && board[row][col] == 2) {
+        board[row][col] = 4; // หงส์ฝ่ายดำ
+      } else if (row == rows - 1 && board[row][col] == 1) {
+        board[row][col] = 3; // หงส์ฝ่ายขาว
       }
+      
+      isBlackTurn = !isBlackTurn;
+    }
+    selectedPiece = null;
+  }
+}
+
+boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
+  // ตรวจสอบการย้ายหมากธรรมดา
+  if (board[oldRow][oldCol] == 1 || board[oldRow][oldCol] == 2) {
+    if (abs(newRow - oldRow) == 1 && abs(newCol - oldCol) == 1 && board[newRow][newCol] == 0) {
+      return true;
     }
   }
   
-  for (int row = 5; row < 8; row++) { // หมากสีแดง (ฝ่ายบน)
-    for (int col = 0; col < boardSize; col++) {
-      if ((row + col) % 2 == 1) {
-        pieces[row][col] = 1; // ฝ่ายสีแดง
-      }
+  // ตรวจสอบการย้ายของหงส์
+  if (board[oldRow][oldCol] == 3 || board[oldRow][oldCol] == 4) {
+    if (abs(newRow - oldRow) == abs(newCol - oldCol) && board[newRow][newCol] == 0) {
+      return true;
     }
   }
+  
+  return false;
 }
