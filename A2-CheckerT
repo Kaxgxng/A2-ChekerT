@@ -1,0 +1,21 @@
+int boardSize = 8; // ขนาดของกระดาน
+int tileSize = 80; // ขนาดของแต่ละช่องในกระดาน
+
+void setup() {
+  size(boardSize * tileSize, boardSize * tileSize);
+  drawBoard();
+}
+
+void drawBoard() {
+  for (int row = 0; row < boardSize; row++) {
+    for (int col = 0; col < boardSize; col++) {
+      // สลับสีระหว่างสีขาวและสีดำ
+      if ((row + col) % 2 == 0) {
+        fill(255); // สีขาว
+      } else {
+        fill(0); // สีดำ
+      }
+      rect(col * tileSize, row * tileSize, tileSize, tileSize);
+    }
+  }
+}
