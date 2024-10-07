@@ -131,21 +131,31 @@ void mousePressed() {
         selectedPiece = new PVector(col, row); // Update selectedPiece to new position
         capturing = canCaptureAgain(row, col);
         
+        // If can't capture again, deselect and end turn
         if (!capturing) {
-          selectedPiece = null;
-          isBlackTurn = !isBlackTurn; // End turn if no more captures are possible
+          selectedPiece = null; // ยกเลิกการเลือกหมาก
+          isBlackTurn = !isBlackTurn; // สลับเทิร์นเมื่อจับกินต่อไม่ได้
         }
       } else {
         // Regular move without capture
         board[row][col] = board[oldRow][oldCol];
         board[oldRow][oldCol] = 0;
-        selectedPiece = null;
+        
+        // King promotion
+        if (row == 0 && board[row][col] == 2) {
+          board[row][col] = 4; // หงส์ฝ่ายดำ
+        } else if (row == rows - 1 && board[row][col] == 1) {
+          board[row][col] = 3; // หงส์ฝ่ายขาว
+        }
+        
+        selectedPiece = null; // ยกเลิกการเลือกหมากหลังจากเดินเสร็จ
         capturing = false;
-        isBlackTurn = !isBlackTurn; // End turn
+        isBlackTurn = !isBlackTurn; // สลับเทิร์นหลังจากการเดินปกติ
       }
     }
   }
 }
+
 boolean canCaptureAgain(int row, int col) {
   int piece = board[row][col];
   
@@ -177,6 +187,7 @@ boolean canCaptureAgain(int row, int col) {
 
   return false; // ไม่มีทิศทางไหนให้จับกินต่อได้
 }
+
 
 // Check if the piece can capture again
 boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
@@ -215,22 +226,22 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
     }
   }
 
-  // ตรวจสอบการย้ายของหงส์ (เดินได้ทุกทิศทาง)
-  if (piece == 3 || piece == 4) {
-    // King normal move
-    if (abs(newRow - oldRow) == abs(newCol - oldCol) && board[newRow][newCol] == 0) {
+ // ตรวจสอบการย้ายของหงส์ (เดินได้ทุกทิศทาง)
+if (piece == 3 || piece == 4) {
+  // King normal move (เดินได้ทุกทิศทางในแนวทแยง 1 ช่อง)
+  if (abs(newRow - oldRow) == abs(newCol - oldCol) && board[newRow][newCol] == 0) {
+    return true;
+  }
+
+  // King capture move (จับกินได้ทุกทิศทางในแนวทแยง)
+  if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2 && board[newRow][newCol] == 0) {
+    int midRow = (oldRow + newRow) / 2;
+    int midCol = (oldCol + newCol) / 2;
+    if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
       return true;
     }
-    
-    // King capture move
-    if (abs(newRow - oldRow) == 2 && abs(newCol - oldCol) == 2 && board[newRow][newCol] == 0) {
-      int midRow = (oldRow + newRow) / 2;
-      int midCol = (oldCol + newCol) / 2;
-      if (board[midRow][midCol] != 0 && board[midRow][midCol] != piece) {
-        return true;
-      }
-    }
   }
+}
   
   return false;
 }
