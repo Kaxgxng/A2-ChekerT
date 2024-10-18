@@ -455,7 +455,7 @@ void checkGameOver() {
 
 void drawUI() {
     fill(0);
-    text("Turn: " + (isBlackTurn ? "Black" : "White"), width / 2, height - 50);
+    text("Turn: " + (isBlackTurn ? "Black" : "White"), width / 1.5, height - 75);
     if (gameOver) {
         textSize(48);
         text(winner, width / 2, height / 2);
