@@ -479,44 +479,45 @@ void drawUI() {
 
 void saveGame() {
     PrintWriter output = createWriter(saveFileName);
+    // Save the game state including the board, whose turn it is, and if a capture is ongoing
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            output.print(board[row][col] + " ");
+            output.print(board[row][col] + " "); // Save each board position
         }
-        output.println();
+        output.println(); // Newline after each row
     }
+    // Save additional game state info
     output.println(isBlackTurn);
+    output.println(capturing);
     output.println(gameOver);
     output.println(winner);
-    output.flush(); // Ensure all data is written
-    output.close(); // Close the file
-    println("Game saved to " + saveFileName);
+    output.flush(); // Ensure the data is written to the file
+    output.close();
+    println("Game saved successfully.");
 }
 
 void loadGame() {
-    // Check if the file exists before trying to load it
-    File file = new File(dataPath(saveFileName));
-    if (!file.exists()) {
-        println("Save file not found.");
-        return; // If the file is not found, exit the function
-    }
-    
-    // Otherwise, load the game state
     String[] lines = loadStrings(saveFileName);
-    if (lines != null && lines.length >= rows + 3) { // Ensure there are enough lines
-        for (int row = 0; row < rows; row++) {
-            String[] tokens = split(lines[row], ' ');
-            for (int col = 0; col < cols; col++) {
-                board[row][col] = int(tokens[col]);
-            }
-        }
-        isBlackTurn = Boolean.parseBoolean(lines[rows]);
-        gameOver = Boolean.parseBoolean(lines[rows + 1]);
-        winner = lines[rows + 2];
-        println("Game loaded from " + saveFileName);
-    } else {
-        println("Invalid save file.");
+    if (lines == null || lines.length == 0) {
+        println("No saved game found.");
+        return;
     }
+
+    // Load board state from the file
+    for (int row = 0; row < rows; row++) {
+        String[] tokens = split(trim(lines[row]), " ");
+        for (int col = 0; col < cols; col++) {
+            board[row][col] = int(tokens[col]);
+        }
+    }
+
+    // Load other game states
+    isBlackTurn = Boolean.parseBoolean(lines[rows].trim());
+    capturing = Boolean.parseBoolean(lines[rows + 1].trim());
+    gameOver = Boolean.parseBoolean(lines[rows + 2].trim());
+    winner = lines[rows + 3].trim();
+    
+    println("Game loaded successfully.");
 }
 
 void resetGame() {
