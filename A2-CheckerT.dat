@@ -1,4 +1,4 @@
-int rows = 8;
+  int rows = 8;
 int cols = 8;
 int tileSize = 100;
 int[][] board = new int[rows][cols]; // 2D array for the game board
@@ -167,42 +167,39 @@ void mousePressed() {
 
     if (!isWithinBounds(row, col)) return; // Ensure within bounds
 
-    // Clicked on a piece
-    if (selectedPiece == null && (board[row][col] != 0 && board[row][col] != -1)) {
-        // Select a piece to move (only the current player's pieces)
-        if ((isBlackTurn && (board[row][col] == 2 || board[row][col] == 4)) ||
-            (!isBlackTurn && (board[row][col] == 1 || board[row][col] == 3))) {
+    int piece = board[row][col];
 
-            if (anyCaptureAvailable(isBlackTurn ? 2 : 1)) {
+    // Clicked on a piece
+    if (selectedPiece == null && (piece != 0 && piece != -1)) {
+        // Allow only current player's pieces to be selected
+        if ((isBlackTurn && (piece == 2 || piece == 4)) ||
+            (!isBlackTurn && (piece == 1 || piece == 3))) {
+
+            // Prioritize capture moves if available
+            if (anyCaptureAvailable(piece)) {
                 if (isCaptureMoveAvailable(row, col)) {
-                    selectedPiece = new PVector(col, row); // Select piece that can capture
+                    selectedPiece = new PVector(col, row); // Select the capturing piece
                 }
             } else {
                 selectedPiece = new PVector(col, row); // Select any piece
             }
         }
     } else if (selectedPiece != null) {
-        // Allow player to deselect the currently selected piece by clicking it again
-        if (selectedPiece.x == col && selectedPiece.y == row) {
-            selectedPiece = null; // Deselect the piece
-        } else {
-            // Attempt to move the selected piece
-            int oldCol = int(selectedPiece.x);
-            int oldRow = int(selectedPiece.y);
+        int oldCol = int(selectedPiece.x);
+        int oldRow = int(selectedPiece.y);
 
-            if (isValidMove(oldRow, oldCol, row, col) || isCaptureMove(oldRow, oldCol, row, col)) {
-                movePiece(oldRow, oldCol, row, col); // Move the piece
-                if (!capturing) {
-                    selectedPiece = null; // Clear selection if not in multiple capture
-                }
-            } else {
-                println("Invalid move from (" + oldRow + ", " + oldCol + ") to (" + row + ", " + col + ")");
-                // Optionally, you can deselect the piece on invalid move
-                // selectedPiece = null;
+        // Attempt to move or capture
+        if (isValidMove(oldRow, oldCol, row, col) || isCaptureMove(oldRow, oldCol, row, col)) {
+            movePiece(oldRow, oldCol, row, col); // Move the piece
+            if (!capturing) {
+                selectedPiece = null; // Clear selection if not in multiple capture
             }
+        } else {
+            println("Invalid move from (" + oldRow + ", " + oldCol + ") to (" + row + ", " + col + ")");
         }
     }
 }
+
 
 void mouseClicked() {
     // Save, Load, or Reset game state based on button clicks
@@ -282,25 +279,27 @@ boolean isValidMove(int oldRow, int oldCol, int newRow, int newCol) {
 
     int piece = board[oldRow][oldCol];
 
+    // Check if any capture is available for the current player
+    if (anyCaptureAvailable(piece)) {
+        return false; // Prevent movement if a capture is available
+    }
+
     // Regular pieces move only 1 square diagonally forward
     if (piece == 1 || piece == 2) { 
         int direction = (piece == 1) ? 1 : -1; // White moves down, Black moves up
-        // Ensure that the piece only moves diagonally forward
         if (newRow == oldRow + direction && abs(newCol - oldCol) == 1) {
             return true; // Valid regular move
         }
-    } 
-    // Kings can move multiple squares diagonally
-    else if (piece == 3 || piece == 4) { 
+    } else if (piece == 3 || piece == 4) { // Kings can move multiple squares diagonally
         if (abs(newRow - oldRow) == abs(newCol - oldCol)) {
-            // Check if King can move in a straight diagonal path
             if (isPathClear(oldRow, oldCol, newRow, newCol)) {
                 return true; // Valid king move
             }
         }
     }
     return false; // Invalid move
-}  
+}
+
 
 boolean isValidKingCapture(int oldRow, int oldCol, int newRow, int newCol) {
     int rowStep = (newRow - oldRow) > 0 ? 1 : -1;
@@ -528,16 +527,15 @@ void resetGame() {
     println("Game reset.");
 }
 
-boolean anyCaptureAvailable(int pieceType) {
+boolean anyCaptureAvailable(int playerPiece) {
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
-            if (board[row][col] == pieceType || board[row][col] == pieceType + 2) { // Check for regular piece or king
-                if (isCaptureMoveAvailable(row, col)) {
-                    println("Capture available for piece at (" + row + ", " + col + ")");
-                    return true; // Found a piece that can capture
-                }
+            if ((playerPiece == 1 || playerPiece == 3) && (board[row][col] == 1 || board[row][col] == 3)) {
+                if (isCaptureMoveAvailable(row, col)) return true;
+            } else if ((playerPiece == 2 || playerPiece == 4) && (board[row][col] == 2 || board[row][col] == 4)) {
+                if (isCaptureMoveAvailable(row, col)) return true;
             }
         }
     }
-    return false; // No capture moves available
+    return false;
 }
